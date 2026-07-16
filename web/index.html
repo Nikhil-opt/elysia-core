@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ELYSIA Companion System Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #030712;
+            --panel-bg: rgba(17, 24, 39, 0.7);
+            --accent-cyan: #06b6d4;
+            --accent-purple: #a855f7;
+            --accent-pink: #ec4899;
+            --text-main: #f3f4f6;
+            --text-dim: #9ca3af;
+            --glow-color: rgba(6, 182, 212, 0.4);
+            --border-glow: rgba(168, 85, 247, 0.2);
+            --font-main: 'Outfit', sans-serif;
+            --font-mono: 'Share Tech Mono', monospace;
+        }
+
+        [data-theme="cyberpunk"] {
+            --bg-color: #0f051d;
+            --panel-bg: rgba(15, 5, 29, 0.85);
+            --accent-cyan: #00ffcc;
+            --accent-purple: #ff00ff;
+            --accent-pink: #ff007f;
+            --text-main: #ffffff;
+            --text-dim: #8b9bb4;
+            --glow-color: rgba(0, 255, 204, 0.6);
+        }
+
+        [data-theme="minimalist"] {
+            --bg-color: #0b0f19;
+            --panel-bg: rgba(20, 26, 40, 0.8);
+            --accent-cyan: #3b82f6;
+            --accent-purple: #6366f1;
+            --accent-pink: #f43f5e;
+            --text-main: #e2e8f0;
+            --text-dim: #64748b;
+            --glow-color: rgba(59, 130, 246, 0.3);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            scrollbar-width: thin;
+            scrollbar-color: var(--accent-cyan) var(--bg-color);
+        }
+
+        body {
+            background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(168, 85, 247, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(6, 182, 212, 0.15) 0px, transparent 50%);
+            color: var(--text-main);
+            font-family: var(--font-main);
+            min-height: 100vh;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            transition: all 0.5s ease;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem 2rem;
+            backdrop-filter: blur(12px);
+            background: rgba(3, 7, 18, 0.5);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            z-index: 10;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo-mark {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+            box-shadow: 0 0 15px var(--glow-color);
+            position: relative;
+            animation: pulse-ring 3s infinite alternate;
+        }
+
+        .logo-mark::after {
+            content: '';
+            position: absolute;
+            top: 4px;
+            left: 4px;
+            right: 4px;
+            bottom: 4px;
+            background: var(--bg-color);
+            border-radius: 50%;
+        }
+
+        .logo-title h1 {
+            font-size: 1.6rem;
+            font-weight: 800;
+            letter-spacing: 2px;
+            background: linear-gradient(to right, var(--text-main), var(--accent-cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .logo-title span {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            color: var(--accent-purple);
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(6, 182, 212, 0.1);
+            border: 1px solid rgba(6, 182, 212, 0.2);
+            padding: 0.4rem 1rem;
+            border-radius: 20px;
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background-color: var(--accent-cyan);
+            border-radius: 50%;
+            box-shadow: 0 0 8px var(--accent-cyan);
+            animation: pulse-dot 1.5s infinite;
+        }
+
+        .theme-select {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-main);
+            padding: 0.4rem 0.8rem;
+            border-radius: 8px;
+            font-family: var(--font-main);
+            outline: none;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .theme-select:hover {
+            border-color: var(--accent-cyan);
+        }
+
+        main {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 350px 1fr 400px;
+            gap: 1.5rem;
+            padding: 1.5rem;
+            height: calc(100vh - 80px);
+            max-height: calc(100vh - 80px);
+        }
+
+        @media (max-width: 1200px) {
+            main {
+                grid-template-columns: 1fr;
+                height: auto;
+                max-height: none;
+                overflow-y: auto;
+            }
+        }
+
+        .panel {
+            background: var(--panel-bg);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            position: relative;
+            transition: border 0.3s;
+        }
+
+        .panel:hover {
+            border-color: rgba(6, 182, 212, 0.2);
+        }
+
+        .panel-header {
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .panel-title {
+            font-family: var(--font-mono);
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+            color: var(--accent-cyan);
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .panel-title::before {
+            content: '//';
+            color: var(--accent-purple);
+        }
+
+        /* Center Column: Avatar & Interactive Core */
+        .core-panel {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        .avatar-container {
+            width: 250px;
+            height: 250px;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .avatar-ring {
+            position: absolute;
+            border: 2px dashed rgba(6, 182, 212, 0.3);
+            border-radius: 50%;
+            animation: rotate-clockwise 20s linear infinite;
+        }
+
+        .ring-1 { width: 100%; height: 100%; }
+        .ring-2 { 
+            width: 85%; 
+            height: 85%; 
+            border: 1px solid rgba(168, 85, 247, 0.3); 
+            border-left-color: transparent;
+            animation: rotate-counter-clockwise 15s linear infinite; 
+        }
+        .ring-3 { 
+            width: 70%; 
+            height: 70%; 
+            border: 3px double rgba(236, 72, 153, 0.2); 
+            animation: rotate-clockwise 10s linear infinite; 
+        }
+
+        .avatar-core {
+            width: 100px;
+            height: 100px;
+            background: radial-gradient(circle, var(--accent-cyan) 0%, rgba(168, 85, 247, 0.6) 70%, transparent 100%);
+            border-radius: 50%;
+            box-shadow: 0 0 40px var(--accent-cyan);
+            z-index: 2;
+            animation: breathe 4s ease-in-out infinite alternate;
+            position: relative;
+        }
+
+        .avatar-core::after {
+            content: '';
+            position: absolute;
+            top: 25%;
+            left: 25%;
+            width: 50%;
+            height: 50%;
+            background: white;
+            border-radius: 50%;
+            filter: blur(4px);
+            opacity: 0.8;
+        }
+
+        .avatar-state-label {
+            font-family: var(--font-mono);
+            font-size: 1.1rem;
+            color: var(--text-main);
+            letter-spacing: 4px;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+        }
+
+        .avatar-sublabel {
+            font-size: 0.8rem;
+            color: var(--text-dim);
+        }
+
+        /* Left Column: Chat and Streams */
+        .chat-history {
+            flex: 1;
+            padding: 1.25rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .chat-bubble {
+            max-width: 85%;
+            padding: 0.75rem 1rem;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .bubble-user {
+            background: rgba(168, 85, 247, 0.15);
+            border: 1px solid rgba(168, 85, 247, 0.2);
+            align-self: flex-end;
+            border-bottom-right-radius: 2px;
+        }
+
+        .bubble-elysia {
+            background: rgba(6, 182, 212, 0.1);
+            border: 1px solid rgba(6, 182, 212, 0.2);
+            align-self: flex-start;
+            border-bottom-left-radius: 2px;
+        }
+
+        .chat-input-area {
+            padding: 1rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .chat-input {
+            flex: 1;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: var(--text-main);
+            padding: 0.75rem 1rem;
+            font-family: var(--font-main);
+            outline: none;
+            transition: border 0.3s;
+        }
+
+        .chat-input:focus {
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 10px rgba(6, 182, 212, 0.15);
+        }
+
+        .send-btn {
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+            color: white;
+            border: none;
+            padding: 0 1.25rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: opacity 0.3s;
+        }
+
+        .send-btn:hover {
+            opacity: 0.9;
+        }
+
+        /* Voice Visualizer */
+        .voice-visualization {
+            height: 60px;
+            padding: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 3px;
+        }
+
+        .wave-bar {
+            width: 4px;
+            height: 10px;
+            background: var(--accent-cyan);
+            border-radius: 2px;
+            animation: idle-wave 1.2s ease-in-out infinite alternate;
+        }
+
+        .wave-bar:nth-child(2n) {
+            animation-delay: 0.2s;
+            background: var(--accent-purple);
+        }
+        .wave-bar:nth-child(3n) {
+            animation-delay: 0.4s;
+            background: var(--accent-pink);
+        }
+
+        /* Right Column: Tab System */
+        .tabs-header {
+            display: flex;
+            background: rgba(0, 0, 0, 0.2);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .tab-btn {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: var(--text-dim);
+            padding: 0.75rem 0.5rem;
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            cursor: pointer;
+            text-transform: uppercase;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .tab-btn:hover {
+            color: var(--text-main);
+        }
+
+        .tab-btn.active {
+            color: var(--accent-cyan);
+            border-bottom-color: var(--accent-cyan);
+            background: rgba(6, 182, 212, 0.05);
+        }
+
+        .tab-content-container {
+            flex: 1;
+            position: relative;
+            overflow-y: auto;
+        }
+
+        .tab-panel {
+            display: none;
+            padding: 1.25rem;
+            height: 100%;
+        }
+
+        .tab-panel.active {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        /* Timeline and Graph Visualizations */
+        .timeline-item {
+            border-left: 2px solid var(--accent-purple);
+            padding-left: 1rem;
+            margin-bottom: 1rem;
+            position: relative;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -6px;
+            top: 2px;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--accent-purple);
+            box-shadow: 0 0 6px var(--accent-purple);
+        }
+
+        .timeline-time {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            color: var(--accent-cyan);
+        }
+
+        .timeline-desc {
+            font-size: 0.85rem;
+            margin-top: 0.25rem;
+        }
+
+        /* Telemetry dashboard design */
+        .telemetry-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 0.5rem 0;
+        }
+
+        .telemetry-val {
+            font-family: var(--font-mono);
+            color: var(--accent-cyan);
+        }
+
+        /* Knowledge Graph canvas */
+        .kg-canvas-container {
+            width: 100%;
+            height: 250px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Task graph list */
+        .task-list-item {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 0.75rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .task-status-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            font-family: var(--font-mono);
+        }
+
+        .status-completed { color: #10b981; }
+        .status-running { color: #f59e0b; }
+        .status-pending { color: #6b7280; }
+
+        /* Animations keyframes */
+        @keyframes rotate-clockwise {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        @keyframes rotate-counter-clockwise {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(-360deg); }
+        }
+        @keyframes breathe {
+            0% { transform: scale(1); filter: drop-shadow(0 0 10px var(--accent-cyan)); }
+            100% { transform: scale(1.08); filter: drop-shadow(0 0 25px var(--accent-purple)); }
+        }
+        @keyframes pulse-ring {
+            0% { box-shadow: 0 0 0 0 rgba(6, 182, 212, 0.4); }
+            100% { box-shadow: 0 0 0 10px rgba(6, 182, 212, 0); }
+        }
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+        @keyframes idle-wave {
+            0% { height: 10px; }
+            100% { height: 45px; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-left">
+            <div class="logo-mark"></div>
+            <div class="logo-title">
+                <h1>ELYSIA</h1>
+                <span>Living Intelligence Core</span>
+            </div>
+        </div>
+        <div class="header-right">
+            <div class="status-badge">
+                <div class="status-dot"></div>
+                <span id="connection-status">CONNECTED</span>
+            </div>
+            <select class="theme-select" id="theme-selector" onchange="changeTheme(this.value)">
+                <option value="default">Futuristic Neon</option>
+                <option value="cyberpunk">Cyberpunk High</option>
+                <option value="minimalist">Deep Space Blue</option>
+            </select>
+        </div>
+    </header>
+
+    <main>
+        <!-- Left Panel: Chat Interface -->
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-title">Conversational Interface</div>
+            </div>
+            <div class="chat-history" id="chat-messages">
+                <div class="chat-bubble bubble-elysia">
+                    Greetings. I am ELYSIA. How can I assist you with your cognitive workflows and daily operations today?
+                </div>
+            </div>
+            
+            <div class="voice-visualization" id="voice-vis">
+                <div class="wave-bar"></div>
+                <div class="wave-bar"></div>
+                <div class="wave-bar"></div>
+                <div class="wave-bar"></div>
+                <div class="wave-bar"></div>
+                <div class="wave-bar"></div>
+                <div class="wave-bar"></div>
+                <div class="wave-bar"></div>
+                <div class="wave-bar"></div>
+                <div class="wave-bar"></div>
+            </div>
+
+            <div class="chat-input-area">
+                <input type="text" class="chat-input" id="message-input" placeholder="Initiate conversation..." onkeypress="handleKeyPress(event)">
+                <button class="send-btn" onclick="sendMessage()">TRANSMIT</button>
+            </div>
+        </div>
+
+        <!-- Center Panel: Cybernetic Avatar -->
+        <div class="panel core-panel">
+            <div class="avatar-container">
+                <div class="avatar-ring ring-1"></div>
+                <div class="avatar-ring ring-2"></div>
+                <div class="avatar-ring ring-3"></div>
+                <div class="avatar-core" id="avatar-core-node"></div>
+            </div>
+            <div class="avatar-state-label" id="core-state-label">IDLE</div>
+            <div class="avatar-sublabel" id="core-detail-label">Monitoring telemetry systems...</div>
+        </div>
+
+        <!-- Right Panel: Holographic Data & Logs -->
+        <div class="panel">
+            <div class="tabs-header">
+                <button class="tab-btn active" onclick="switchTab('telemetry')">Telemetry</button>
+                <button class="tab-btn" onclick="switchTab('memory')">Memory</button>
+                <button class="tab-btn" onclick="switchTab('tasks')">Task Graph</button>
+                <button class="tab-btn" onclick="switchTab('knowledge')">Knowledge</button>
+            </div>
+            <div class="tab-content-container">
+                <!-- Telemetry Tab -->
+                <div class="tab-panel active" id="tab-telemetry">
+                    <div class="telemetry-row">
+                        <span>Cognitive Model</span>
+                        <span class="telemetry-val">Qwen 2.5 Coder (Local)</span>
+                    </div>
+                    <div class="telemetry-row">
+                        <span>Semantic Memory Nodes</span>
+                        <span class="telemetry-val" id="memory-count">124 Facts</span>
+                    </div>
+                    <div class="telemetry-row">
+                        <span>Response Latency</span>
+                        <span class="telemetry-val">42ms</span>
+                    </div>
+                    <div class="telemetry-row">
+                        <span>Threat Matrix Level</span>
+                        <span class="telemetry-val" style="color: #10b981;">SAFE</span>
+                    </div>
+                    <div class="telemetry-row">
+                        <span>Visual Tracking</span>
+                        <span class="telemetry-val">ACTIVE</span>
+                    </div>
+                </div>
+
+                <!-- Memory Timeline Tab -->
+                <div class="tab-panel" id="tab-memory">
+                    <div class="timeline-item">
+                        <div class="timeline-time">Today, 10:37 AM</div>
+                        <div class="timeline-desc">Initialized ELYSIA Living Intelligence Core session.</div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-time">Today, 10:15 AM</div>
+                        <div class="timeline-desc">Linked GitHub credentials for nikhil-opt.</div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-time">Yesterday, 06:12 PM</div>
+                        <div class="timeline-desc">Completed strategic evaluation report structure.</div>
+                    </div>
+                </div>
+
+                <!-- Task Graph Tab -->
+                <div class="tab-panel" id="tab-tasks">
+                    <div class="task-list-item">
+                        <div class="task-status-row">
+                            <span>1. Memory Sync Event Loop</span>
+                            <span class="status-completed">Completed</span>
+                        </div>
+                        <div style="font-size: 0.8rem; color: var(--text-dim);">Consolidated episodic vectors to SQLite log storage.</div>
+                    </div>
+                    <div class="task-list-item">
+                        <div class="task-status-row">
+                            <span>2. Agent Coordination Task</span>
+                            <span class="status-running">In Progress</span>
+                        </div>
+                        <div style="font-size: 0.8rem; color: var(--text-dim);">Research agent synthesizing documentation indexes.</div>
+                    </div>
+                </div>
+
+                <!-- Knowledge Graph Tab -->
+                <div class="tab-panel" id="tab-knowledge">
+                    <div class="kg-canvas-container">
+                        <svg width="100%" height="100%" style="background: transparent;">
+                            <line x1="50" y1="50" x2="150" y2="100" stroke="rgba(255,255,255,0.15)" stroke-width="1.5"></line>
+                            <line x1="150" y1="100" x2="250" y2="180" stroke="rgba(255,255,255,0.15)" stroke-width="1.5"></line>
+                            <line x1="50" y1="50" x2="200" y2="50" stroke="rgba(255,255,255,0.15)" stroke-width="1.5"></line>
+                            
+                            <circle cx="50" cy="50" r="10" fill="var(--accent-cyan)"></circle>
+                            <text x="50" y="32" fill="var(--text-main)" font-size="9" text-anchor="middle" font-family="monospace">USER</text>
+                            
+                            <circle cx="150" cy="100" r="14" fill="var(--accent-purple)"></circle>
+                            <text x="150" y="78" fill="var(--text-main)" font-size="9" text-anchor="middle" font-family="monospace">ELYSIA</text>
+                            
+                            <circle cx="200" cy="50" r="8" fill="var(--accent-pink)"></circle>
+                            <text x="200" y="36" fill="var(--text-main)" font-size="9" text-anchor="middle" font-family="monospace">GITHUB</text>
+                            
+                            <circle cx="250" cy="180" r="10" fill="var(--accent-cyan)"></circle>
+                            <text x="250" y="162" fill="var(--text-main)" font-size="9" text-anchor="middle" font-family="monospace">SCRATCH</text>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // WebSockets & Simulator
+        let ws;
+        const chatMessages = document.getElementById("chat-messages");
+        const coreStateLabel = document.getElementById("core-state-label");
+        const coreDetailLabel = document.getElementById("core-detail-label");
+        const messageInput = document.getElementById("message-input");
+        const connectionStatus = document.getElementById("connection-status");
+        const avatarCoreNode = document.getElementById("avatar-core-node");
+
+        function initWebSocket() {
+            ws = new WebSocket("ws://localhost:8000/v1/cognitive/stream");
+
+            ws.onopen = () => {
+                connectionStatus.innerText = "CONNECTED";
+                connectionStatus.style.color = "var(--accent-cyan)";
+            };
+
+            ws.onmessage = (event) => {
+                const payload = JSON.parse(event.data);
+                handlePayload(payload);
+            };
+
+            ws.onclose = () => {
+                connectionStatus.innerText = "SIMULATOR ACTIVE";
+                connectionStatus.style.color = "#f59e0b";
+            };
+        }
+
+        function handlePayload(payload) {
+            if (payload.event === "cognitive_state") {
+                coreStateLabel.innerText = payload.state;
+                coreDetailLabel.innerText = payload.detail;
+                
+                if (payload.state === "thinking") {
+                    avatarCoreNode.style.background = "radial-gradient(circle, var(--accent-purple) 0%, rgba(236, 72, 153, 0.6) 70%, transparent 100%)";
+                    avatarCoreNode.style.boxShadow = "0 0 45px var(--accent-purple)";
+                } else if (payload.state === "responding") {
+                    avatarCoreNode.style.background = "radial-gradient(circle, var(--accent-pink) 0%, rgba(168, 85, 247, 0.6) 70%, transparent 100%)";
+                    avatarCoreNode.style.boxShadow = "0 0 45px var(--accent-pink)";
+                } else {
+                    avatarCoreNode.style.background = "radial-gradient(circle, var(--accent-cyan) 0%, rgba(168, 85, 247, 0.6) 70%, transparent 100%)";
+                    avatarCoreNode.style.boxShadow = "0 0 40px var(--accent-cyan)";
+                }
+            } else if (payload.event === "message") {
+                appendChatBubble(payload.text, false);
+                coreStateLabel.innerText = "IDLE";
+                coreDetailLabel.innerText = "Monitoring telemetry systems...";
+            }
+        }
+
+        function appendChatBubble(text, isUser) {
+            const bubble = document.createElement("div");
+            bubble.className = `chat-bubble ${isUser ? 'bubble-user' : 'bubble-elysia'}`;
+            bubble.innerText = text;
+            chatMessages.appendChild(bubble);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function sendMessage() {
+            const text = messageInput.value.trim();
+            if (!text) return;
+
+            appendChatBubble(text, true);
+            messageInput.value = "";
+
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ event: "message", text: text }));
+            } else {
+                // Fallback Simulator Loop
+                simulateElysiaResponse(text);
+            }
+        }
+
+        function simulateElysiaResponse(text) {
+            handlePayload({ event: "cognitive_state", state: "thinking", detail: "Locating workspace reference files..." });
+            
+            setTimeout(() => {
+                handlePayload({ event: "cognitive_state", state: "responding", detail: "Synthesizing conversational response" });
+                
+                setTimeout(() => {
+                    let simulatedReply = `Received command: "${text}". Memory databases successfully indexed. Waiting for workspace task execution inputs.`;
+                    handlePayload({ event: "message", text: simulatedReply });
+                }, 1000);
+            }, 1200);
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        // Tab Switching Logic
+        function switchTab(tabName) {
+            document.querySelectorAll(".tab-btn").forEach(btn => btn.classList.remove("active"));
+            document.querySelectorAll(".tab-panel").forEach(panel => panel.classList.remove("active"));
+
+            event.target.classList.add("active");
+            document.getElementById(`tab-${tabName}`).classList.add("active");
+        }
+
+        // Theme switching logic
+        function changeTheme(theme) {
+            if (theme === "default") {
+                document.documentElement.removeAttribute("data-theme");
+            } else {
+                document.documentElement.setAttribute("data-theme", theme);
+            }
+        }
+
+        // Initialize connection
+        initWebSocket();
+    </script>
+</body>
+</html>
